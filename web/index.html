@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="MarketLens: auditable market trends, risk and data quality research."
+    />
+    <title>MarketLens — Understand the risk behind the return</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <aside class="sidebar">
+      <a class="logo" href="#overview"
+        ><span>◈</span> MarketLens<small>RESEARCH WORKSPACE</small></a
+      >
+      <p class="navlabel">WORKSPACE</p>
+      <nav>
+        <a href="#overview">◫ &nbsp; Overview</a
+        ><a href="#risk">◎ &nbsp; Risk laboratory</a
+        ><a href="#evidence">▤ &nbsp; Evidence notebook</a
+        ><a href="#quality">◇ &nbsp; Data observatory</a
+        ><a href="#sql">⌘ &nbsp; SQL explorer</a>
+      </nav>
+      <div class="sidebar-bottom">
+        <span class="dot"></span> Local-first analytics
+        <p>Python · Pandas · SQLite<br />Built by Manoj Kumar Reddy</p>
+        <a href="https://github.com/hydramanu" target="_blank" rel="noreferrer"
+          >View GitHub ↗</a
+        >
+      </div>
+    </aside>
+    <main>
+      <header>
+        <span>WORKSPACE / <b>MARKET INTELLIGENCE</b></span
+        ><span class="badge">PERSONAL RESEARCH PROJECT</span>
+      </header>
+      <section id="overview">
+        <div class="title-row">
+          <div>
+            <p class="eyebrow">LESS NOISE. MORE CONTEXT.</p>
+            <h1>See the market.<br /><em>Understand the risk.</em></h1>
+            <p class="intro">
+              Trace every number back to its data. Explore what changed,<br
+                class="desktop"
+              />
+              what could go wrong, and what the evidence actually says.
+            </p>
+          </div>
+          <div class="live">
+            <span><span class="dot"></span> PUBLIC QUOTE</span>
+            <select id="quoteSymbol" aria-label="Quote symbol">
+              <option>BTC-USD</option>
+              <option>ETH-USD</option></select
+            ><strong id="quotePrice">—</strong
+            ><small id="quoteTime">Enable polling to fetch a quote</small
+            ><label
+              ><input type="checkbox" id="poll" /> Poll every 30 seconds</label
+            >
+          </div>
+        </div>
+        <div class="toolbar">
+          <label
+            >DATASET<select id="dataset">
+              <option value="AAPL">Apple · historical study</option>
+            </select></label
+          ><label
+            >WINDOW<select id="window">
+              <option value="63">63 observations</option>
+              <option value="126">126 observations</option>
+              <option value="252" selected>252 observations</option>
+              <option value="1000">All observations</option>
+            </select></label
+          ><label>REPLAY THROUGH<input type="date" id="cutoff" /></label
+          ><button id="latest">Latest available ↗</button
+          ><button class="primary" id="export">Export evidence ↓</button>
+        </div>
+        <div id="notice" role="status" aria-live="polite">
+          Loading the research workspace…
+        </div>
+        <div class="source-strip">
+          <span id="source">Waiting for data</span><span id="range"></span>
+        </div>
+        <div class="metrics">
+          <article>
+            <span>LAST CLOSE</span><strong id="close">—</strong
+            ><small>USD · selected dataset</small>
+          </article>
+          <article>
+            <span>WINDOW RETURN</span><strong id="period_return">—</strong
+            ><small>Close-to-close · excludes dividends</small>
+          </article>
+          <article>
+            <span>20-OBSERVATION VOLATILITY</span
+            ><strong id="volatility">—</strong
+            ><small>Annualized · sample standard deviation</small>
+          </article>
+          <article>
+            <span>MAXIMUM DRAWDOWN</span><strong id="max_drawdown">—</strong
+            ><small>Peak-to-trough within selected window</small>
+          </article>
+        </div>
+        <div class="chart-layout">
+          <article class="panel main-chart">
+            <div class="panel-head">
+              <div>
+                <p class="eyebrow">THE BIG PICTURE</p>
+                <h2>Price & perspective</h2>
+              </div>
+              <div class="legend">
+                <i></i> Close <i class="muted"></i> 20-day mean
+              </div>
+            </div>
+            <div
+              id="priceChart"
+              class="chart"
+              aria-label="Historical closing prices"
+            ></div>
+            <div class="chart-caption">
+              <span id="chartStart"></span
+              ><span>Daily observations · hover or focus a point</span
+              ><span id="chartEnd"></span>
+            </div>
+          </article>
+          <article class="panel signal">
+            <p class="eyebrow">CONTEXT, NOT A PREDICTION</p>
+            <h2>Signal desk</h2>
+            <div id="alerts"></div>
+            <div class="volume-stat">
+              <small>VOLUME VS PRIOR 20 OBS.</small
+              ><strong id="volume_ratio">—</strong
+              ><span id="volumeChange"></span>
+            </div>
+          </article>
+        </div>
+      </section>
+      <section id="risk">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">01 / RISK LABORATORY</p>
+            <h2>Explore the downside.</h2>
+          </div>
+          <p>
+            Historical behaviour and hypothetical stress,<br />kept separate
+            from predictions.
+          </p>
+        </div>
+        <div class="risk-grid">
+          <article class="panel">
+            <h3>Underwater curve</h3>
+            <p>Distance from the highest close in this window</p>
+            <div id="drawdownChart" class="chart short"></div>
+          </article>
+          <article class="panel">
+            <h3>Volatility over time</h3>
+            <p>20-observation rolling annualized volatility</p>
+            <div id="volChart" class="chart short"></div>
+          </article>
+          <article class="panel stress">
+            <h3>What-if stress test</h3>
+            <p>A simple exposure calculation, not a forecast.</p>
+            <label
+              >Hypothetical exposure (USD)<input
+                id="exposure"
+                type="number"
+                value="10000"
+                min="0"
+                max="1000000000" /></label
+            ><label
+              >Price shock <output id="shockLabel">−10%</output
+              ><input
+                id="shock"
+                type="range"
+                min="-50"
+                max="30"
+                value="-10" /></label
+            ><strong id="stressResult">−$1,000</strong
+            ><small id="stressAfter">Remaining value: $9,000</small>
+            <hr />
+            <p id="tailRisk"></p>
+          </article>
+        </div>
+      </section>
+      <section id="evidence">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">02 / EVIDENCE NOTEBOOK</p>
+            <h2>Findings you can explain.</h2>
+          </div>
+          <button id="report">Download research brief ↓</button>
+        </div>
+        <div class="findings" id="findings"></div>
+      </section>
+      <section id="quality">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">03 / DATA OBSERVATORY</p>
+            <h2>Trust starts with the inputs.</h2>
+          </div>
+          <p>No silent filling. No hidden exclusions.</p>
+        </div>
+        <div class="quality-grid">
+          <article class="panel">
+            <h3>Quality receipt</h3>
+            <dl id="qualityRows"></dl>
+            <p class="fine">
+              Retention is not an accuracy score. Date gaps are a heuristic, not
+              an exchange-calendar audit. Cleaning counts cover the full
+              imported dataset.
+            </p>
+            <div class="hash" id="hash"></div>
+          </article>
+          <article class="panel">
+            <h3>Bring your own daily data</h3>
+            <p>
+              Upload a CSV for local analysis. Your data stays on this computer.
+            </p>
+            <code>date,open,high,low,close,volume</code
+            ><label
+              >Asset calendar<select id="assetClass">
+                <option value="equity">Equity · 252 periods/year</option>
+                <option value="crypto">Crypto · 365 periods/year</option>
+              </select></label
+            ><input
+              id="csv"
+              type="file"
+              accept=".csv,text/csv"
+              aria-label="Import daily price CSV"
+            />
+            <p class="fine">
+              Maximum 1.5 MB. At least 22 valid rows. Invalid prices are
+              quarantined; duplicate dates keep the last row. One instrument per
+              file.
+            </p>
+          </article>
+          <article class="panel">
+            <h3>Refresh a public dataset</h3>
+            <p>
+              Fetch recent completed daily candles from Coinbase. Today's
+              incomplete candle is excluded.
+            </p>
+            <label
+              >Product<select id="refreshSymbol">
+                <option>BTC-USD</option>
+                <option>ETH-USD</option>
+              </select></label
+            ><button class="primary" id="refresh">
+              Fetch latest daily data ↻
+            </button>
+            <p class="fine">
+              Up to 300 daily observations. Crypto is separate from the
+              historical equity study. Provider access may vary by region.
+            </p>
+          </article>
+        </div>
+      </section>
+      <section id="sql">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">04 / SQL EXPLORER</p>
+            <h2>From rows to reasons.</h2>
+          </div>
+          <span class="badge">SQLITE WINDOW FUNCTIONS</span>
+        </div>
+        <article class="panel">
+          <details>
+            <summary>View the query</summary>
+            <pre>
+WITH daily AS (
+  SELECT date, close, volume,
+    LAG(close) OVER (ORDER BY date) AS previous_close,
+    LAG(volume) OVER (ORDER BY date) AS previous_volume
+  FROM prices WHERE dataset = ? AND date &lt;= ?
+)
+SELECT date, close, volume,
+  100.0 * (close / previous_close - 1) AS return_pct,
+  100.0 * (volume / NULLIF(previous_volume, 0) - 1) AS volume_change_pct
+FROM daily ORDER BY date DESC LIMIT 15;</pre
+            >
+          </details>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Close (USD)</th>
+                  <th>Volume</th>
+                  <th>Return %</th>
+                  <th>Volume change %</th>
+                </tr>
+              </thead>
+              <tbody id="sqlRows"></tbody>
+            </table>
+          </div>
+          <p class="fine">
+            Latest 15 rows through the replay date. SQL uses full prior history;
+            dashboard statistics use the selected window.
+          </p>
+        </article>
+      </section>
+      <footer>
+        <span class="logo">◈ MarketLens</span>
+        <p>
+          Independent learning project. Not affiliated with Nasdaq, an exchange,
+          or a data provider.<br />Historical statistics and scenarios are not
+          trading recommendations.
+        </p>
+        <a href="https://github.com/hydramanu" target="_blank" rel="noreferrer"
+          >Manoj Kumar Reddy ↗</a
+        >
+      </footer>
+    </main>
+    <script src="app.js"></script>
+  </body>
+</html>
